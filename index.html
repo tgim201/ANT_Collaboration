@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANT 협력수업 분석 플랫폼 | 사서교사-교과교사 행위자-네트워크 & 생태체계 온톨로지</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- D3.js v7 -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#162033',
+              950: '#090d16'
+            }
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500/30 selection:text-sky-200">
+
+  <!-- Top Header -->
+  <header class="glass-panel sticky top-0 z-40 border-b border-slate-800/80 px-4 lg:px-6 py-3">
+    <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-4">
+      <!-- Brand Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 via-sky-500/20 to-indigo-500/30 border border-amber-400/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
+          <i data-lucide="network" class="w-5 h-5 text-amber-400"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base lg:text-lg font-bold tracking-tight text-white">
+              ANT 학교도서관 협력수업 분석 플랫폼
+            </h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              Bronfenbrenner × Latour &amp; Callon
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            사서교사-교과교사 협력수업 행위자-네트워크 이론(ANT) 및 5계층 생태체계 온톨로지(`ant_library_collab.ttl`)
+          </p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 no-print" role="tablist">
+        <button id="tab-btn-studio" onclick="switchMainTab('studio')" class="main-tab-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-sky-500/20 text-sky-300 border border-sky-500/40">
+          <i data-lucide="Orbit" class="w-3.5 h-3.5"></i>
+          <span>ANT 네트워크 &amp; 면담 분석실</span>
+        </button>
+        <button id="tab-btn-matrix" onclick="switchMainTab('matrix')" class="main-tab-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200">
+          <i data-lucide="table-2" class="w-3.5 h-3.5"></i>
+          <span>번역 4단계 매트릭스 &amp; 리포트</span>
+        </button>
+        <button id="tab-btn-repo" onclick="switchMainTab('repo')" class="main-tab-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i>
+          <span>온톨로지(.ttl) &amp; 스냅샷 저장소</span>
+        </button>
+      </nav>
+
+      <!-- Live Metrics & Firebase Status -->
+      <div class="flex items-center gap-2.5 no-print">
+        <div class="hidden xl:flex items-center gap-3 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            <span class="text-slate-400">행위자:</span>
+            <strong id="kpi-actant-count" class="text-white font-mono-code">18</strong>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span class="text-slate-400">의무통과점(OPP):</span>
+            <strong id="kpi-opp-count" class="text-amber-300 font-mono-code">5</strong>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">네트워크 결속도:</span>
+            <strong id="kpi-cohesion" class="text-emerald-400 font-mono-code">82.4%</strong>
+          </div>
+        </div>
+
+        <button onclick="openFirebaseModal()" id="firebase-status-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 border border-slate-700/80 transition">
+          <span id="db-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="db-status-label" class="text-slate-300">LocalStorage 모드</span>
+          <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 max-w-[1920px] w-full mx-auto px-4 lg:px-6 py-4 flex flex-col gap-4">
+
+    <!-- ==========================================
+         TAB 1: INTERACTIVE ANT STUDIO
+    =========================================== -->
+    <section id="tab-content-studio" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+      <!-- Left & Center Column: Interactive Network Canvas (7 cols on lg) -->
+      <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-3">
+        <!-- Filter & Layout Control Bar -->
+        <div class="glass-panel rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2.5 no-print">
+          <!-- System Layer Filter Pills -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-sky-400"></i> 체계 층위:
+            </span>
+            <button onclick="setSystemFilter('ALL')" data-sys="ALL" class="sys-filter-btn active px-2.5 py-1 rounded-lg text-xs font-medium bg-sky-500/20 text-sky-300 border border-sky-500/40 transition">
+              전체 (18)
+            </button>
+            <button onclick="setSystemFilter('Microsystem')" data-sys="Microsystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-rose-400/50 transition">
+              미시체계
+            </button>
+            <button onclick="setSystemFilter('Mesosystem')" data-sys="Mesosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-amber-400/50 transition">
+              중간체계
+            </button>
+            <button onclick="setSystemFilter('Exosystem')" data-sys="Exosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-emerald-400/50 transition">
+              외체계
+            </button>
+            <button onclick="setSystemFilter('Macrosystem')" data-sys="Macrosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-sky-400/50 transition">
+              거시체계
+            </button>
+            <button onclick="setSystemFilter('Chronosystem')" data-sys="Chronosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-purple-400/50 transition">
+              시간체계
+            </button>
+          </div>
+
+          <!-- Actant & Link Toggles -->
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="actant-type-filter" onchange="applyGraphFilters()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+              <option value="ALL">모든 행위자 (인간+비인간)</option>
+              <option value="HumanActor">인간 행위자 (원형)</option>
+              <option value="NonHumanActor">비인간 행위자 (사각/마름모)</option>
+              <option value="OPP_ONLY">의무통과점 (OPP)만 보기</option>
+            </select>
+
+            <select id="link-type-filter" onchange="applyGraphFilters()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+              <option value="ALL">모든 관계 링크</option>
+              <option value="interactsWith">연대/협력 (interactsWith)</option>
+              <option value="conflictsWith">갈등/저항 (conflictsWith)</option>
+            </select>
+
+            <button onclick="toggleConcentricRings()" id="toggle-rings-btn" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition flex items-center gap-1" title="생태학적 동심원 중력 궤도 토글">
+              <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+              <span>동심원 궤도</span>
+            </button>
+
+            <button onclick="resetGraphView()" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1" title="줌/위치 초기화">
+              <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+              <span>화면 맞춤</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- D3 Interactive Canvas Box -->
+        <div id="network-canvas-container" class="flex-1 min-h-[540px] lg:min-h-[620px] rounded-2xl border border-slate-800 shadow-2xl relative select-none">
+          <svg id="ant-network-svg" class="w-full h-full block"></svg>
+
+          <!-- Top-Left Legend Overlay -->
+          <div class="absolute top-3 left-3 glass-panel rounded-xl p-3 text-xs space-y-2 max-w-[260px] pointer-events-auto">
+            <div class="font-semibold text-slate-200 flex items-center justify-between">
+              <span>ANT &amp; 생태체계 범례</span>
+              <span class="text-[10px] text-slate-400 font-mono-code">D3 Force</span>
+            </div>
+            <!-- Actant Shapes -->
+            <div class="grid grid-cols-2 gap-1.5 text-[11px] text-slate-300 border-t border-slate-800 pt-1.5">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-full bg-sky-400 inline-block border border-white/60"></span>
+                <span>인간 행위자</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rotate-45 bg-purple-400 inline-block border border-white/60"></span>
+                <span>비인간 행위자</span>
+              </div>
+              <div class="flex items-center gap-1.5 col-span-2">
+                <span class="w-3.5 h-3.5 rounded-full border-2 border-dashed border-amber-400 bg-amber-400/20 inline-block"></span>
+                <span class="text-amber-300 font-medium">의무통과점 (OPP · 황금 후광)</span>
+              </div>
+            </div>
+            <!-- System Layer Colors -->
+            <div class="grid grid-cols-3 gap-1 text-[10px] border-t border-slate-800 pt-1.5">
+              <span class="flex items-center gap-1 text-rose-300"><i class="w-2 h-2 rounded-full bg-rose-500"></i>미시</span>
+              <span class="flex items-center gap-1 text-amber-300"><i class="w-2 h-2 rounded-full bg-amber-500"></i>중간</span>
+              <span class="flex items-center gap-1 text-emerald-300"><i class="w-2 h-2 rounded-full bg-emerald-500"></i>외체계</span>
+              <span class="flex items-center gap-1 text-sky-300"><i class="w-2 h-2 rounded-full bg-sky-500"></i>거시</span>
+              <span class="flex items-center gap-1 text-purple-300 col-span-2"><i class="w-2 h-2 rounded-full bg-purple-500"></i>시간체계</span>
+            </div>
+            <!-- Link Types -->
+            <div class="space-y-1 text-[11px] border-t border-slate-800 pt-1.5">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-0.5 bg-sky-400 inline-block"></span>
+                <span class="text-slate-300">상호작용/연대 (`:interactsWith`)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-0.5 border-b-2 border-dashed border-rose-500 inline-block"></span>
+                <span class="text-rose-300">갈등/저항 (`:conflictsWith`)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top-Right Active Mutation Banner (shown when interview analysis mutates graph) -->
+          <div id="mutation-banner" class="hidden absolute top-3 right-3 glass-panel border-amber-500/50 rounded-xl px-3.5 py-2.5 text-xs max-w-xs shadow-lg">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="font-bold text-amber-300 flex items-center gap-1">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 면담 데이터 반영됨
+              </span>
+              <button onclick="resetToBaseOntology()" class="text-[11px] text-slate-400 hover:text-white underline">
+                초기 온톨로지 복원
+              </button>
+            </div>
+            <p id="mutation-banner-text" class="text-[11px] text-slate-300 leading-relaxed"></p>
+          </div>
+
+          <!-- Bottom Canvas Instruction Tip -->
+          <div class="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none text-[11px] text-slate-400">
+            <span class="glass-panel px-2.5 py-1 rounded-lg pointer-events-auto">
+              💡 노드를 클릭하면 우측 <strong>행위자 인스펙터</strong>에서 상세 온톨로지 트리플과 면담 증거를 확인할 수 있습니다. (드래그하여 위치 이동, 휠로 확대/축소)
+            </span>
+            <div class="glass-panel px-2.5 py-1 rounded-lg pointer-events-auto flex items-center gap-2">
+              <span>최고 매개 중심성(Centrality):</span>
+              <strong id="canvas-top-centrality" class="text-amber-300">사서교사 (:TeacherLibrarian)</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Callon's 4 Stages of Translation Live Strip -->
+        <div class="glass-panel rounded-2xl p-3.5">
+          <div class="flex items-center justify-between mb-2.5">
+            <div class="flex items-center gap-2">
+              <i data-lucide="git-merge" class="w-4 h-4 text-amber-400"></i>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">
+                Callon의 번역 4단계 (4 Stages of Translation) 실시간 진단
+              </h2>
+            </div>
+            <span id="translation-status-badge" class="text-[11px] px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30">
+              기본 온톨로지 기준
+            </span>
+          </div>
+          <div id="studio-translation-cards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Actant Inspector & Qualitative Interview Suite (5 cols on lg, 4 on xl) -->
+      <div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-3">
+
+        <!-- Sub-tabs for Right Drawer: [1] 면담 입력 & 2단계 분석기 | [2] 행위자(Actant) 인스펙터 -->
+        <div class="glass-panel rounded-2xl p-1.5 flex items-center gap-1 no-print">
+          <button id="drawer-tab-interview" onclick="switchDrawerTab('interview')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            <i data-lucide="message-square-quote" class="w-3.5 h-3.5"></i>
+            <span>질적 면담 분석 &amp; 그래프 변형</span>
+          </button>
+          <button id="drawer-tab-inspector" onclick="switchDrawerTab('inspector')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200">
+            <i data-lucide="microscope" class="w-3.5 h-3.5"></i>
+            <span>행위자(Actant) 상세 인스펙터</span>
+          </button>
+        </div>
+
+        <!-- PANEL A: Interview Input & 2nd Stage Analysis Suite -->
+        <div id="drawer-panel-interview" class="glass-panel rounded-2xl p-4 flex-1 flex flex-col gap-3.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                질적 면담 전사자료 입력 &amp; 2단계 네트워크 재분석
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">
+                면담 텍스트에서 촉진 요인(연대 강화)과 저항/장벽 요인(입시·진도 갈등 링크)을 자동 추출하여 그래프 가중치를 실시간 변형합니다.
+              </p>
+            </div>
+          </div>
+
+          <!-- Sample Interviewee Preset Buttons -->
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+              샘플 면담 참여자 시나리오 선택 (클릭 시 즉시 적용)
+            </label>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button onclick="loadSampleInterview('librarian_a')" class="text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/50 transition group">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200">사서교사 A (중등 7년차)</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300">촉진 우세</span>
+                </div>
+                <p class="text-[11px] text-slate-400 truncate mt-0.5">전문적학습공동체·에듀테크·성취기준 재구성 주도</p>
+              </button>
+
+              <button onclick="loadSampleInterview('teacher_b')" class="text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-rose-500/50 transition group">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-rose-300 group-hover:text-rose-200">교과교사 B (고교 국어)</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300">저항/갈등</span>
+                </div>
+                <p class="text-[11px] text-slate-400 truncate mt-0.5">수능/입시 진도 압박·평가 부담·독립 업무 선호</p>
+              </button>
+
+              <button onclick="loadSampleInterview('principal_c')" class="text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/50 transition group">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-amber-300 group-hover:text-amber-200">관리자 C (학교장)</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300">제도/갈등혼재</span>
+                </div>
+                <p class="text-[11px] text-slate-400 truncate mt-0.5">2022 개정 교육과정 융합수업 장려 vs 예산 부족</p>
+              </button>
+
+              <button onclick="loadSampleInterview('synthesis_d')" class="text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-purple-500/50 transition group">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-purple-300 group-hover:text-purple-200">종단 심층면담 D (통합)</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300">번역 4단계 완성</span>
+                </div>
+                <p class="text-[11px] text-slate-400 truncate mt-0.5">진도 압박 극복 → 전학공 등록 → 전교적 동원</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interview Metadata Form -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">면담 대상자 명칭/코드</label>
+              <input id="interview-speaker" type="text" value="사서교사 A (중등 7년차)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">초점 행위자 노드</label>
+              <select id="interview-target-actor" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+                <option value="SubjectTeacher">교과교사 (:SubjectTeacher)</option>
+                <option value="TeacherLibrarian">사서교사 (:TeacherLibrarian)</option>
+                <option value="Principal">학교장 (:Principal)</option>
+                <option value="PLC">전문적 학습공동체 (:PLC)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Transcript Textarea -->
+          <div class="flex-1 flex flex-col">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-[11px] text-slate-400 font-medium">면담 전사록 (Qualitative Interview Transcript)</label>
+              <button onclick="clearInterviewInput()" class="text-[11px] text-slate-400 hover:text-slate-200">초기화</button>
+            </div>
+            <textarea id="interview-textarea" rows="5" class="w-full flex-1 min-h-[120px] bg-slate-900/95 border border-slate-700 rounded-xl p-3 text-xs text-slate-100 leading-relaxed focus:outline-none focus:border-amber-400 resize-y" placeholder="면담 전사 내용을 입력하세요. 예: '진도 압박과 평가 부담, 수능 입시 준비 때문에 협력수업이 부담스럽지만, 전문적학습공동체에서 성취기준 재구성과 에듀테크 AI 리터러시 융합수업을 함께 설계하면서...'"></textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-2">
+            <button onclick="runInterviewAnalysis()" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-sky-500 hover:from-amber-400 hover:to-sky-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/10 flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="cpu" class="w-4 h-4"></i>
+              <span>ANT 텍스트 추론 &amp; 네트워크 변형 실행</span>
+            </button>
+            <button onclick="saveCurrentAnalysisSnapshot()" class="py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs font-semibold flex items-center gap-1.5 transition" title="현재 면담 및 네트워크 스냅샷을 DB에 저장">
+              <i data-lucide="save" class="w-4 h-4 text-emerald-400"></i>
+              <span>저장</span>
+            </button>
+          </div>
+
+          <!-- Extraction & Inference Output Box -->
+          <div id="analysis-result-box" class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-2.5 text-xs">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+              <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                <i data-lucide="radar" class="w-3.5 h-3.5 text-sky-400"></i>
+                키워드/감성 추출 및 자율 추론 결과
+              </span>
+              <span id="analysis-sentiment-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">대기 중</span>
+            </div>
+
+            <div id="extracted-keywords-container" class="space-y-1.5">
+              <p class="text-slate-400 text-[11px]">상단 샘플 시나리오를 클릭하거나 면담 텍스트를 입력한 뒤 실행 버튼을 누르세요.</p>
+            </div>
+
+            <!-- Annotated Quote Preview -->
+            <div id="annotated-transcript-preview" class="hidden pt-2 border-t border-slate-800/80 text-[11px] text-slate-300 leading-relaxed max-h-32 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- PANEL B: Actant Inspector Drawer -->
+        <div id="drawer-panel-inspector" class="hidden glass-panel rounded-2xl p-4 flex-1 flex flex-col gap-3.5">
+          <div id="inspector-content" class="flex-1 flex flex-col gap-3">
+            <!-- Dynamically populated when a node is clicked -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 2: TRANSLATION MATRIX & RESEARCH EXPORT
+    =========================================== -->
+    <section id="tab-content-matrix" class="hidden flex-col gap-5">
+      <!-- Top Action Header -->
+      <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 no-print">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i data-lucide="book-open-check" class="w-5 h-5 text-amber-400"></i>
+            Callon의 번역 4단계(Translation) 매트릭스 &amp; 학술 연구 리포트
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            현재 네트워크 가중치 및 면담 분석 결과를 반영한 학술 보고서 테이블과 데이터 내보내기(JSON / CSV / 인쇄)를 제공합니다.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="exportNetworkJSON()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-sky-300 flex items-center gap-1.5 transition">
+            <i data-lucide="file-json" class="w-4 h-4"></i>
+            <span>JSON 내보내기</span>
+          </button>
+          <button onclick="exportMatrixCSV()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>행위자·번역 CSV 내보내기</span>
+          </button>
+          <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-amber-500/10">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>학술 리포트 인쇄 / PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. Callon's 4 Stages of Translation Matrix Table -->
+      <div class="glass-panel rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="git-commit-horizontal" class="w-4 h-4"></i>
+            1. Callon의 번역 4단계 (Four Moments of Translation) 분석 매트릭스
+          </h3>
+          <span class="text-xs text-slate-400">의무통과점(OPP) 설정부터 전교적 제도화(Black-boxing)까지의 동학</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-300 bg-slate-900/70">
+                <th class="py-3 px-3 font-bold w-40">번역 단계 (Stage)</th>
+                <th class="py-3 px-3 font-bold w-48">핵심 기제 및 의무통과점 (OPP)</th>
+                <th class="py-3 px-3 font-bold">주요 참여 행위자 (인간·비인간)</th>
+                <th class="py-3 px-3 font-bold">경쟁/저항 요인 (우회 위협)</th>
+                <th class="py-3 px-3 font-bold">현장 면담 증거 및 번역 전략</th>
+                <th class="py-3 px-3 font-bold w-28 text-center">이행 수준</th>
+              </tr>
+            </thead>
+            <tbody id="translation-matrix-tbody" class="divide-y divide-slate-800">
+              <!-- Populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. Ecological Systems x ANT Actant Inventory & Centrality Table -->
+      <div class="glass-panel rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-sky-300 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+            2. 생태체계(5층위) × ANT 행위자 중심성 및 역할 매트릭스 (18개 노드 전수)
+          </h3>
+          <span class="text-xs text-slate-400">Weighted Degree &amp; 매개 중심성(Betweenness) 실시간 산출</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-300 bg-slate-900/70">
+                <th class="py-2.5 px-3 font-bold">생태체계 층위</th>
+                <th class="py-2.5 px-3 font-bold">행위자 명칭 (URI)</th>
+                <th class="py-2.5 px-3 font-bold">유형</th>
+                <th class="py-2.5 px-3 font-bold">ANT 역할 (Role)</th>
+                <th class="py-2.5 px-3 font-bold text-center">OPP 여부</th>
+                <th class="py-2.5 px-3 font-bold text-center">연대/갈등 링크</th>
+                <th class="py-2.5 px-3 font-bold text-center">가중 연결중심성</th>
+                <th class="py-2.5 px-3 font-bold text-center">매개 중심성</th>
+                <th class="py-2.5 px-3 font-bold">정의 및 네트워크 기능</th>
+              </tr>
+            </thead>
+            <tbody id="actant-inventory-tbody" class="divide-y divide-slate-800">
+              <!-- Populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 3: ONTOLOGY (.TTL) & FIREBASE REPOSITORY
+    =========================================== -->
+    <section id="tab-content-repo" class="hidden flex-col gap-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- Left: Saved Interviews & Snapshots (/interviews & /network_snapshots) -->
+        <div class="lg:col-span-6 flex flex-col gap-4">
+          <div class="glass-panel rounded-2xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="archive" class="w-4 h-4 text-emerald-400"></i>
+                  저장된 질적 면담 및 네트워크 스냅샷 (`/interviews` &amp; `/network_snapshots`)
+                </h3>
+                <p class="text-xs text-slate-400">Firebase 또는 LocalStorage에 저장된 분석 기록을 불러와 그래프를 즉시 복원합니다.</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button onclick="pullSnapshotsFromFirebase()" class="px-2.5 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-semibold flex items-center gap-1" title="Firebase DB에서 스냅샷 목록 동기화">
+                  <i data-lucide="cloud-download" class="w-3.5 h-3.5"></i>
+                  <span>Firebase 불러오기</span>
+                </button>
+                <button onclick="seedFirebaseDatabase()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center gap-1" title="초기 4대 면담 시드 데이터를 Firebase에 일괄 업로드">
+                  <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
+                  <span>초기 시드 DB 업로드</span>
+                </button>
+                <button onclick="saveCurrentAnalysisSnapshot()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1">
+                  <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                  <span>현재 상태 저장</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="saved-snapshots-list" class="space-y-2.5 max-h-[540px] overflow-y-auto pr-1">
+              <!-- Populated by app.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Raw Turtle (.ttl) Ontology Parser & Editor -->
+        <div class="lg:col-span-6 flex flex-col gap-4">
+          <div class="glass-panel rounded-2xl p-4 flex-1 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="file-code-2" class="w-4 h-4 text-sky-400"></i>
+                  원본 온톨로지 명세 (`ant_library_collab.ttl`) 실시간 파서
+                </h3>
+                <p class="text-xs text-slate-400">RDF/Turtle 구문을 직접 수정하고 그래프에 즉시 재파싱(Re-parse)할 수 있습니다.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="reparseCustomTTL()" class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-1 transition">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                  <span>TTL 재파싱 적용</span>
+                </button>
+              </div>
+            </div>
+            <textarea id="ttl-editor-textarea" class="w-full flex-1 min-h-[460px] bg-slate-950 border border-slate-800 rounded-xl p-3.5 font-mono-code text-xs text-sky-200 leading-relaxed focus:outline-none focus:border-sky-500"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FIREBASE CONFIG MODAL -->
+  <div id="firebase-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="database" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="text-base font-bold text-white">Firebase 연동 설정 (`/interviews` &amp; `/network_snapshots`)</h3>
+        </div>
+        <button onclick="closeFirebaseModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Firebase 프로젝트 설정(JSON 또는 개별 키)을 입력하면 <code class="text-amber-300">/interviews</code> 및 <code class="text-sky-300">/network_snapshots</code> 컬렉션에 실시간으로 동기화됩니다. 입력하지 않으면 브라우저 <strong>LocalStorage 오프라인 모드</strong>로 자동 작동합니다.
+      </p>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">API Key (`apiKey`)</label>
+          <input id="fb-apiKey" type="text" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono-code" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-slate-400 mb-1">Project ID (`projectId`)</label>
+            <input id="fb-projectId" type="text" placeholder="ant-library-collab" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono-code" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Database URL (Realtime DB 선택)</label>
+            <input id="fb-databaseURL" type="text" placeholder="https://...-default-rtdb.firebaseio.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono-code" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">또는 Firebase Config JSON 전체 붙여넣기</label>
+          <textarea id="fb-rawJson" rows="3" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "...", "databaseURL": "..."}' class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-mono-code text-[11px]"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+        <button onclick="clearFirebaseConfig()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 text-xs font-medium">
+          연동 해제 (LocalStorage 전환)
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeFirebaseModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium">
+            닫기
+          </button>
+          <button onclick="saveFirebaseConfig()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+            설정 저장 및 연결
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

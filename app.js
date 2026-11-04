@@ -1537,26 +1537,58 @@ function seedDefaultSnapshots() {
   const seeds = [
     {
       id: 'snap-seed-1',
-      createdAt: '2026-11-04 09:30',
+      createdAt: '2026-11-04 09:30:00',
       speaker: '사서교사 A (중등 7년차) [샘플 스냅샷]',
       targetActor: 'TeacherLibrarian',
       transcript: SAMPLE_INTERVIEWS.librarian_a.transcript,
       cohesionScore: 89.2,
       barrierCount: 0,
-      facilitatorCount: 6
+      facilitatorCount: 8
     },
     {
       id: 'snap-seed-2',
-      createdAt: '2026-11-04 09:35',
+      createdAt: '2026-11-04 09:35:00',
       speaker: '교과교사 B (고교 국어) [입시/진도 저항 스냅샷]',
       targetActor: 'SubjectTeacher',
       transcript: SAMPLE_INTERVIEWS.teacher_b.transcript,
-      cohesionScore: 68.5,
-      barrierCount: 5,
+      cohesionScore: 61.4,
+      barrierCount: 6,
       facilitatorCount: 0
+    },
+    {
+      id: 'snap-seed-3',
+      createdAt: '2026-11-04 09:40:00',
+      speaker: '관리자 C (학교장) [제도/예산 길항 스냅샷]',
+      targetActor: 'Principal',
+      transcript: SAMPLE_INTERVIEWS.principal_c.transcript,
+      cohesionScore: 78.6,
+      barrierCount: 3,
+      facilitatorCount: 3
+    },
+    {
+      id: 'snap-seed-4',
+      createdAt: '2026-11-04 09:45:00',
+      speaker: '종단 심층면담 D (통합) [번역 4단계 완성 스냅샷]',
+      targetActor: 'SubjectTeacher',
+      transcript: SAMPLE_INTERVIEWS.synthesis_d.transcript,
+      cohesionScore: 81.5,
+      barrierCount: 4,
+      facilitatorCount: 6
     }
   ];
   localStorage.setItem(STORAGE_KEY_SNAPSHOTS, JSON.stringify(seeds));
+  return seeds;
+}
+
+function getResolvedDatabaseUrl() {
+  if (!firebaseConfig) return '';
+  if (firebaseConfig.databaseURL) {
+    return firebaseConfig.databaseURL.replace(/\/$/, '');
+  }
+  if (firebaseConfig.projectId) {
+    return `https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com`;
+  }
+  return '';
 }
 
 async function saveCurrentAnalysisSnapshot() {
@@ -1580,14 +1612,15 @@ async function saveCurrentAnalysisSnapshot() {
   list.unshift(snapshotRecord);
   localStorage.setItem(STORAGE_KEY_SNAPSHOTS, JSON.stringify(list));
 
-  // If Firebase databaseURL is configured, also push to Firebase Realtime DB (/interviews & /network_snapshots)
-  if (firebaseConfig && firebaseConfig.databaseURL) {
+  // Push to Firebase Realtime DB (/interviews & /network_snapshots) if configured
+  const baseUrl = getResolvedDatabaseUrl();
+  if (baseUrl) {
     try {
-      const baseUrl = firebaseConfig.databaseURL.replace(/\/$/, '');
       await fetch(`${baseUrl}/interviews/${snapshotRecord.id}.json`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: snapshotRecord.id,
           speaker: snapshotRecord.speaker,
           targetActor: snapshotRecord.targetActor,
           transcript: snapshotRecord.transcript,
@@ -1608,6 +1641,87 @@ async function saveCurrentAnalysisSnapshot() {
   }
 
   renderSavedSnapshotsList();
+}
+
+async function pullSnapshotsFromFirebase() {
+  const baseUrl = getResolvedDatabaseUrl();
+  if (!baseUrl) {
+    openFirebaseModal();
+    showToast('먼저 Firebase 설정(Database URL 또는 Project ID)을 입력해 주세요.', 'amber');
+    return;
+  }
+
+  try {
+    const resp = await fetch(`${baseUrl}/network_snapshots.json`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (!data) {
+      showToast('Firebase에 저장된 스냅샷이 없습니다. [초기 시드 DB 업로드]를 먼저 실행해 보세요.', 'amber');
+      return;
+    }
+    const remoteList = Object.values(data).sort((a, b) =>
+      String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+    );
+    localStorage.setItem(STORAGE_KEY_SNAPSHOTS, JSON.stringify(remoteList));
+    renderSavedSnapshotsList();
+    showToast(`Firebase에서 스냅샷 ${remoteList.length}건을 성공적으로 불러왔습니다.`, 'emerald');
+  } catch (err) {
+    showToast('Firebase 불러오기 실패: Database URL 또는 데이터베이스 보안 규칙(.read: true)을 확인하세요.', 'rose');
+  }
+}
+
+async function seedFirebaseDatabase() {
+  const baseUrl = getResolvedDatabaseUrl();
+  if (!baseUrl) {
+    openFirebaseModal();
+    showToast('먼저 Firebase 설정(Database URL 또는 Project ID)을 입력해 주세요.', 'amber');
+    return;
+  }
+
+  try {
+    let seedPayload = null;
+    try {
+      const resp = await fetch('firebase-seed-data.json');
+      if (resp.ok) {
+        seedPayload = await resp.json();
+      }
+    } catch (_) {
+      // Fallback if running via file:// protocol
+    }
+
+    if (!seedPayload) {
+      const seeds = seedDefaultSnapshots();
+      const interviewsMap = {};
+      const snapshotsMap = {};
+      seeds.forEach((s) => {
+        interviewsMap[s.id] = {
+          id: s.id,
+          speaker: s.speaker,
+          targetActor: s.targetActor,
+          transcript: s.transcript,
+          createdAt: s.createdAt
+        };
+        snapshotsMap[s.id] = s;
+      });
+      seedPayload = {
+        interviews: interviewsMap,
+        network_snapshots: snapshotsMap
+      };
+    }
+
+    const putResp = await fetch(`${baseUrl}/.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(seedPayload)
+    });
+
+    if (!putResp.ok) throw new Error('HTTP ' + putResp.status);
+
+    await pullSnapshotsFromFirebase();
+    showToast('초기 시드 데이터(/ontology_meta, /interviews, /network_snapshots)가 Firebase에 업로드되었습니다!', 'emerald');
+  } catch (err) {
+    showToast('Firebase 업로드 실패: Realtime Database URL과 규칙(.write: true)을 확인해 주세요.', 'rose');
+  }
 }
 
 function renderSavedSnapshotsList() {
