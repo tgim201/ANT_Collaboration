@@ -1,0 +1,226 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg-primary: #0b1120;
+  --bg-secondary: #111827;
+  --bg-card: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-opp: #f59e0b;
+  --link-ally: #38bdf8;
+  --link-conflict: #f43f5e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  background-color: #0b1120;
+  color: #f8fafc;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+/* D3 Network Canvas Styling */
+#network-canvas-container {
+  background: radial-gradient(circle at center, #131c31 0%, #090d16 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.eco-ring {
+  fill: none;
+  stroke-dasharray: 4 6;
+  transition: stroke-opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.eco-ring-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-anchor: middle;
+  pointer-events: none;
+  opacity: 0.65;
+  text-transform: uppercase;
+}
+
+/* Links */
+.network-link {
+  fill: none;
+  transition: stroke-width 0.3s ease, stroke-opacity 0.3s ease;
+}
+
+.network-link.conflict-link {
+  stroke-dasharray: 7 5;
+  animation: conflictDash 1.2s linear infinite;
+}
+
+.network-link.strengthened-link {
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.65));
+}
+
+.network-link.strengthened-conflict {
+  filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.8));
+}
+
+@keyframes conflictDash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* OPP Animated Halo */
+.opp-halo {
+  fill: none;
+  stroke: #fbbf24;
+  stroke-width: 2px;
+  stroke-dasharray: 4 3;
+  animation: oppPulse 4s linear infinite;
+}
+
+.opp-outer-glow {
+  fill: rgba(251, 191, 36, 0.14);
+  animation: oppBreathe 2.6s ease-in-out infinite;
+}
+
+@keyframes oppPulse {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes oppBreathe {
+  0%, 100% {
+    r: 28px;
+    opacity: 0.25;
+  }
+  50% {
+    r: 35px;
+    opacity: 0.55;
+  }
+}
+
+.node-group {
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+}
+
+.node-group:hover .node-shape {
+  filter: brightness(1.25) drop-shadow(0 0 10px rgba(255, 255, 255, 0.35));
+}
+
+.node-group.selected .node-shape {
+  stroke: #ffffff !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.9));
+}
+
+.node-group.dimmed {
+  opacity: 0.18;
+}
+
+.network-link.dimmed {
+  opacity: 0.08 !important;
+}
+
+/* Glassmorphism panels */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.86);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(71, 85, 105, 0.45);
+}
+
+/* Keyword Highlight Badges */
+.kw-facilitator {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.kw-barrier {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.45);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.kw-actant {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Publication-ready Print Layout */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .glass-panel, .glass-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+  }
+  .text-slate-100, .text-slate-200, .text-slate-300, .text-white {
+    color: #0f172a !important;
+  }
+  .text-slate-400, .text-slate-500 {
+    color: #475569 !important;
+  }
+  #network-canvas-container {
+    background: #f8fafc !important;
+    border: 1px solid #94a3b8 !important;
+    height: 520px !important;
+    page-break-inside: avoid;
+  }
+}
