@@ -1,0 +1,125 @@
+{
+  "ontology_meta": {
+    "title": "Actor-Network Theory (ANT) & Ecological System Ontology for School Library Collaborative Instruction",
+    "version": "2.0.0",
+    "updatedAt": "2026-11-04T10:30:00+09:00",
+    "oppNodes": [
+      "TeacherLibrarian",
+      "SchoolLibrary",
+      "PLC",
+      "NationalCurriculum",
+      "DigitalTransformation"
+    ],
+    "systemLayers": {
+      "Microsystem": ["TeacherLibrarian", "SubjectTeacher", "SchoolLibrary"],
+      "Mesosystem": ["GradeLevelCouncil", "PLC", "StudentHome", "LibraryOperationCommittee"],
+      "Exosystem": ["Principal", "SchoolOperationCommittee", "OfficeOfEducation", "PublicLibrary"],
+      "Macrosystem": ["NationalCurriculum", "LibraryPromotionAct", "CollegeEntrancePreoccupation", "KnowledgeInformationSociety"],
+      "Chronosystem": ["CareerLifeCycle", "DigitalTransformation", "CurriculumCycle"]
+    }
+  },
+  "interviews": {
+    "snap-seed-1": {
+      "id": "snap-seed-1",
+      "createdAt": "2026-11-04 09:30:00",
+      "speaker": "사서교사 A (중등 7년차)",
+      "targetActor": "TeacherLibrarian",
+      "transcript": "초임 시절에는 단독 업무 적응에 급급했지만, 경력이 쌓이면서 전문적학습공동체(전학공)를 통해 교과교사 선생님들과 성취기준 재구성을 함께 연구했습니다. 특히 2022 개정 교육과정의 융합수업과 에듀테크, AI 리터러시 도구 활용을 학교도서관 정보활용교육과 결합하니 교과 선생님들의 참여가 크게 늘었습니다. 도서관 없이는 심층 탐구 수업이 불가능하다는 공감대(OPP)가 형성되었고, 과정중심평가 루브릭을 공동 제작하여 수업 시수로 공식 등록했습니다.",
+      "extractedFacilitators": ["전문적학습공동체", "전학공", "성취기준 재구성", "융합수업", "에듀테크", "AI 리터러시", "탐구", "과정중심평가"],
+      "extractedBarriers": []
+    },
+    "snap-seed-2": {
+      "id": "snap-seed-2",
+      "createdAt": "2026-11-04 09:35:00",
+      "speaker": "교과교사 B (고교 국어교사)",
+      "targetActor": "SubjectTeacher",
+      "transcript": "솔직히 고등학교 현장에서는 수능과 입시 결과에 대한 압박이 가장 큽니다. 정해진 교과서 진도 압박도 심하고 지필평가와 수행평가 채점 등 평가 부담이 막중해서, 사서교사 선생님과 시간을 맞춰 협력수업을 기획하기가 쉽지 않습니다. 예산 부족으로 원하는 학술 DB나 단행본을 즉시 구비하기도 어렵고, 교사마다 각자 교실에서 독립 업무 선호 경향이 강해서 도서관 프로젝트 수업은 후순위로 밀리곤 합니다.",
+      "extractedFacilitators": [],
+      "extractedBarriers": ["수능", "입시", "진도 압박", "평가 부담", "예산 부족", "독립 업무 선호"]
+    },
+    "snap-seed-3": {
+      "id": "snap-seed-3",
+      "createdAt": "2026-11-04 09:40:00",
+      "speaker": "관리자 C (학교장)",
+      "targetActor": "Principal",
+      "transcript": "국가 교육과정에서 강조하는 탐구 기반 학습과 디지털 전환 역량을 키우려면 학교도서관이 학교 교육의 허브가 되어야 합니다. 다만 학교 전체 예산 부족 문제와 학부모님들의 입시 위주 민원, 그리고 일부 교사들의 진도 압박 호소가 공존하고 있습니다. 이를 해결하기 위해 교육청 공모 사업 예산을 확보하고 전문적학습공동체 연구 시간을 학사 일정에 공식 배정하여 협력수업을 장려하고 있습니다.",
+      "extractedFacilitators": ["탐구", "디지털", "전문적학습공동체"],
+      "extractedBarriers": ["예산 부족", "입시", "진도 압박"]
+    },
+    "snap-seed-4": {
+      "id": "snap-seed-4",
+      "createdAt": "2026-11-04 09:45:00",
+      "speaker": "종단 심층면담 D (사서교사-교과교사 공동면담)",
+      "targetActor": "SubjectTeacher",
+      "transcript": "처음에는 수능 입시와 진도 압박, 평가 부담 때문에 협력수업에 저항감이 있었습니다(문제제기). 하지만 사서교사가 성취기준 재구성 자료와 에듀테크·AI 리터러시 팩트체크 워크시트를 선제적으로 제안하며 교과 진도와 수행평가를 동시에 해결하는 방안을 제시했습니다(관심부여). 이후 전문적학습공동체와 학년협의회를 통해 연간 수업 계획서에 역할을 공식 등록(등록)했고, 학교장과 교육청의 예산 지원 속에 전교 모든 학년으로 융합수업이 확산(동원)되었습니다.",
+      "extractedFacilitators": ["성취기준 재구성", "에듀테크", "AI 리터러시", "전문적학습공동체", "예산 지원", "융합수업"],
+      "extractedBarriers": ["수능", "입시", "진도 압박", "평가 부담"]
+    }
+  },
+  "network_snapshots": {
+    "snap-seed-1": {
+      "id": "snap-seed-1",
+      "createdAt": "2026-11-04 09:30:00",
+      "speaker": "사서교사 A (중등 7년차)",
+      "targetActor": "TeacherLibrarian",
+      "transcript": "초임 시절에는 단독 업무 적응에 급급했지만, 경력이 쌓이면서 전문적학습공동체(전학공)를 통해 교과교사 선생님들과 성취기준 재구성을 함께 연구했습니다. 특히 2022 개정 교육과정의 융합수업과 에듀테크, AI 리터러시 도구 활용을 학교도서관 정보활용교육과 결합하니 교과 선생님들의 참여가 크게 늘었습니다. 도서관 없이는 심층 탐구 수업이 불가능하다는 공감대(OPP)가 형성되었고, 과정중심평가 루브릭을 공동 제작하여 수업 시수로 공식 등록했습니다.",
+      "cohesionScore": 89.2,
+      "barrierCount": 0,
+      "facilitatorCount": 8,
+      "translationSummary": {
+        "problematization": 92,
+        "interessement": 86,
+        "enrolment": 95,
+        "mobilization": 76
+      }
+    },
+    "snap-seed-2": {
+      "id": "snap-seed-2",
+      "createdAt": "2026-11-04 09:35:00",
+      "speaker": "교과교사 B (고교 국어교사)",
+      "targetActor": "SubjectTeacher",
+      "transcript": "솔직히 고등학교 현장에서는 수능과 입시 결과에 대한 압박이 가장 큽니다. 정해진 교과서 진도 압박도 심하고 지필평가와 수행평가 채점 등 평가 부담이 막중해서, 사서교사 선생님과 시간을 맞춰 협력수업을 기획하기가 쉽지 않습니다. 예산 부족으로 원하는 학술 DB나 단행본을 즉시 구비하기도 어렵고, 교사마다 각자 교실에서 독립 업무 선호 경향이 강해서 도서관 프로젝트 수업은 후순위로 밀리곤 합니다.",
+      "cohesionScore": 61.4,
+      "barrierCount": 6,
+      "facilitatorCount": 0,
+      "translationSummary": {
+        "problematization": 92,
+        "interessement": 54,
+        "enrolment": 78,
+        "mobilization": 76
+      }
+    },
+    "snap-seed-3": {
+      "id": "snap-seed-3",
+      "createdAt": "2026-11-04 09:40:00",
+      "speaker": "관리자 C (학교장)",
+      "targetActor": "Principal",
+      "transcript": "국가 교육과정에서 강조하는 탐구 기반 학습과 디지털 전환 역량을 키우려면 학교도서관이 학교 교육의 허브가 되어야 합니다. 다만 학교 전체 예산 부족 문제와 학부모님들의 입시 위주 민원, 그리고 일부 교사들의 진도 압박 호소가 공존하고 있습니다. 이를 해결하기 위해 교육청 공모 사업 예산을 확보하고 전문적학습공동체 연구 시간을 학사 일정에 공식 배정하여 협력수업을 장려하고 있습니다.",
+      "cohesionScore": 78.6,
+      "barrierCount": 3,
+      "facilitatorCount": 3,
+      "translationSummary": {
+        "problematization": 92,
+        "interessement": 86,
+        "enrolment": 95,
+        "mobilization": 76
+      }
+    },
+    "snap-seed-4": {
+      "id": "snap-seed-4",
+      "createdAt": "2026-11-04 09:45:00",
+      "speaker": "종단 심층면담 D (사서교사-교과교사 공동면담)",
+      "targetActor": "SubjectTeacher",
+      "transcript": "처음에는 수능 입시와 진도 압박, 평가 부담 때문에 협력수업에 저항감이 있었습니다(문제제기). 하지만 사서교사가 성취기준 재구성 자료와 에듀테크·AI 리터러시 팩트체크 워크시트를 선제적으로 제안하며 교과 진도와 수행평가를 동시에 해결하는 방안을 제시했습니다(관심부여). 이후 전문적학습공동체와 학년협의회를 통해 연간 수업 계획서에 역할을 공식 등록(등록)했고, 학교장과 교육청의 예산 지원 속에 전교 모든 학년으로 융합수업이 확산(동원)되었습니다.",
+      "cohesionScore": 81.5,
+      "barrierCount": 4,
+      "facilitatorCount": 6,
+      "translationSummary": {
+        "problematization": 92,
+        "interessement": 86,
+        "enrolment": 95,
+        "mobilization": 94
+      }
+    }
+  }
+}

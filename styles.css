@@ -1,0 +1,198 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --link-ally: #38bdf8;
+  --link-conflict: #fb7185;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  background-color: #0f172a;
+  color: #f8fafc;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+/* Network Map Container */
+#network-canvas-container {
+  background: radial-gradient(circle at center, #172542 0%, #0b1324 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.eco-ring {
+  fill: none;
+  stroke-dasharray: 5 6;
+  transition: stroke-opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.eco-ring-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-anchor: middle;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Links */
+.network-link {
+  fill: none;
+  transition: stroke-width 0.3s ease, stroke-opacity 0.3s ease;
+  stroke-linecap: round;
+}
+
+.network-link.conflict-link {
+  stroke-dasharray: 8 6;
+  animation: conflictDash 1.2s linear infinite;
+}
+
+.network-link.strengthened-link {
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.65));
+}
+
+.network-link.strengthened-conflict {
+  filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.8));
+}
+
+@keyframes conflictDash {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+/* Key Hub (Essential Link) Gentle Ring */
+.hub-ring {
+  fill: none;
+  stroke: #fbbf24;
+  stroke-width: 2.2px;
+  stroke-dasharray: 5 3;
+  animation: gentleRotate 8s linear infinite;
+}
+
+.hub-glow {
+  fill: rgba(251, 191, 36, 0.14);
+  animation: gentlePulse 2.8s ease-in-out infinite;
+}
+
+@keyframes gentleRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { r: 28px; opacity: 0.25; }
+  50% { r: 35px; opacity: 0.5; }
+}
+
+.node-group {
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+}
+
+.node-group:hover .node-shape {
+  filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+}
+
+.node-group.selected .node-shape {
+  stroke: #ffffff !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.95));
+}
+
+.node-group.dimmed {
+  opacity: 0.15;
+}
+
+.network-link.dimmed {
+  opacity: 0.06 !important;
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: rgba(19, 28, 46, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(71, 85, 105, 0.55);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(71, 85, 105, 0.45);
+}
+
+/* Keyword Highlight Badges */
+.kw-facilitator {
+  background: rgba(16, 185, 129, 0.22);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.kw-barrier {
+  background: rgba(244, 63, 94, 0.22);
+  color: #fda4af;
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* Publication-ready Print Layout */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .glass-panel, .glass-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+  }
+  .text-slate-100, .text-slate-200, .text-slate-300, .text-white {
+    color: #0f172a !important;
+  }
+  .text-slate-400, .text-slate-500 {
+    color: #475569 !important;
+  }
+  #network-canvas-container {
+    background: #f8fafc !important;
+    border: 1px solid #94a3b8 !important;
+    height: 520px !important;
+    page-break-inside: avoid;
+  }
+}

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학교도서관 협력수업 관계망 탐색기 | 사서교사·교과교사 협력 요인 분석</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- D3.js v7 -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500/30 selection:text-sky-200">
+
+  <!-- Top Header -->
+  <header class="glass-panel sticky top-0 z-40 border-b border-slate-800 px-4 lg:px-6 py-3">
+    <div class="max-w-[1800px] mx-auto flex flex-wrap items-center justify-between gap-4">
+      <!-- Brand Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/30 to-amber-500/20 border border-sky-400/40 flex items-center justify-center shadow-lg">
+          <i data-lucide="book-open" class="w-5 h-5 text-sky-300"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base lg:text-lg font-bold tracking-tight text-white">
+              학교도서관 협력수업 관계망 탐색기
+            </h1>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+              누구나 쉽게 보는 수업 생태계 지도
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 mt-0.5">
+            사서교사와 교과교사의 협력수업은 어떻게 만들어지고, 무엇이 수업을 돕거나 가로막는지 한눈에 살펴보세요.
+          </p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 no-print" role="tablist">
+        <button id="tab-btn-studio" onclick="switchMainTab('studio')" class="main-tab-btn flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all bg-sky-500/20 text-sky-300 border border-sky-500/40">
+          <i data-lucide="map" class="w-4 h-4"></i>
+          <span>관계망 지도 &amp; 상황 체험</span>
+        </button>
+        <button id="tab-btn-matrix" onclick="switchMainTab('matrix')" class="main-tab-btn flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
+          <i data-lucide="list-checks" class="w-4 h-4"></i>
+          <span>전체 요소 해설표 &amp; 리포트</span>
+        </button>
+        <button id="tab-btn-repo" onclick="switchMainTab('repo')" class="main-tab-btn flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
+          <i data-lucide="bookmark" class="w-4 h-4"></i>
+          <span>저장된 분석 기록</span>
+        </button>
+      </nav>
+
+      <!-- Quick Summary & Cloud Sync Button -->
+      <div class="flex items-center gap-2.5 no-print">
+        <div class="hidden xl:flex items-center gap-3 bg-slate-900/90 border border-slate-800 px-3.5 py-2 rounded-xl text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">연결 요소:</span>
+            <strong id="kpi-actant-count" class="text-white">18개</strong>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">필수 연결고리:</span>
+            <strong id="kpi-opp-count" class="text-amber-300">5개</strong>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">현재 협력 온도:</span>
+            <strong id="kpi-cohesion" class="text-emerald-400">82.4점</strong>
+          </div>
+        </div>
+
+        <button onclick="toggleBeginnerGuide()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5">
+          <i data-lucide="help-circle" class="w-4 h-4"></i>
+          <span>쉬운 안내서</span>
+        </button>
+
+        <button onclick="openFirebaseModal()" id="firebase-status-btn" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 border border-slate-700/80 transition" title="클라우드 저장소 연결 설정">
+          <span id="db-status-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="db-status-label" class="text-slate-300">자동 저장 켜짐</span>
+          <i data-lucide="cloud" class="w-3.5 h-3.5 text-slate-400"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 max-w-[1800px] w-full mx-auto px-4 lg:px-6 py-4 flex flex-col gap-4">
+
+    <!-- Beginner 30-Second Guide Banner (Collapsible) -->
+    <div id="beginner-guide-banner" class="glass-panel rounded-2xl p-4 border border-sky-500/30 bg-gradient-to-r from-slate-900/95 via-sky-950/30 to-slate-900/95 no-print">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950">처음 오셨나요?</span>
+          <h2 class="text-sm font-bold text-white">이론을 전혀 몰라도 30초 만에 이해하는 관계망 지도 보는 법</h2>
+        </div>
+        <button onclick="toggleBeginnerGuide()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+          <span>안내 접기</span>
+          <i data-lucide="chevron-up" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div class="glass-card rounded-xl p-3 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center shrink-0 text-sky-300 font-bold">1</div>
+          <div>
+            <div class="font-bold text-white mb-1">사람과 환경을 함께 봅니다</div>
+            <p class="text-slate-300 leading-relaxed">
+              선생님 같은 <strong>사람·모임(● 원형)</strong>뿐만 아니라, 도서관 공간·교육과정·입시 분위기 같은 <strong>환경·제도(■ 사각형)</strong>도 수업의 성공을 좌우하는 중요한 주인공입니다.
+            </p>
+          </div>
+        </div>
+        <div class="glass-card rounded-xl p-3 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0 text-emerald-300 font-bold">2</div>
+          <div>
+            <div class="font-bold text-white mb-1">파란 실선(협력) vs 빨간 점선(어려움)</div>
+            <p class="text-slate-300 leading-relaxed">
+              <strong class="text-sky-300">파란 실선</strong>은 서로 돕고 연결되는 <strong>협력 관계</strong>이고, <strong class="text-rose-300">빨간 점선</strong>은 진도·입시 부담처럼 수업을 가로막는 <strong>갈등·어려움 관계</strong>입니다.
+            </p>
+          </div>
+        </div>
+        <div class="glass-card rounded-xl p-3 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0 text-amber-300 font-bold">3</div>
+          <div>
+            <div class="font-bold text-white mb-1">오른쪽에서 현장 상황을 눌러보세요!</div>
+            <p class="text-slate-300 leading-relaxed">
+              오른쪽의 <strong>[현장 이야기 1~4번 버튼]</strong>을 클릭하면, 입시 부담이 클 때와 학습공동체가 활발할 때 지도의 연결선이 어떻게 달라지는지 즉시 볼 수 있습니다.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         TAB 1: INTERACTIVE MAP & SITUATION SIMULATOR
+    =========================================== -->
+    <section id="tab-content-studio" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+      <!-- Left & Center Column: Interactive Map (7 cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-3">
+
+        <!-- Map Control Bar -->
+        <div class="glass-panel rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2.5 no-print">
+          <!-- Layout Mode Switcher -->
+          <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <button id="layout-btn-zones" onclick="setMapLayoutMode('zones')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition flex items-center gap-1.5">
+              <i data-lucide="columns" class="w-3.5 h-3.5"></i>
+              <span>단계별 구역 배치 (추천)</span>
+            </button>
+            <button id="layout-btn-radial" onclick="setMapLayoutMode('radial')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition flex items-center gap-1.5">
+              <i data-lucide="circle-dot" class="w-3.5 h-3.5"></i>
+              <span>동심원 그물망 보기</span>
+            </button>
+          </div>
+
+          <!-- Environment Zone Filter Pills -->
+          <div class="flex flex-wrap items-center gap-1">
+            <button onclick="setSystemFilter('ALL')" data-sys="ALL" class="sys-filter-btn active px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40 transition">
+              전체 (18)
+            </button>
+            <button onclick="setSystemFilter('Microsystem')" data-sys="Microsystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-rose-400/50 transition">
+              1. 교실·수업
+            </button>
+            <button onclick="setSystemFilter('Mesosystem')" data-sys="Mesosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-amber-400/50 transition">
+              2. 교내 모임
+            </button>
+            <button onclick="setSystemFilter('Exosystem')" data-sys="Exosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-emerald-400/50 transition">
+              3. 학교·지역 지원
+            </button>
+            <button onclick="setSystemFilter('Macrosystem')" data-sys="Macrosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-sky-400/50 transition">
+              4. 제도·사회 분위기
+            </button>
+            <button onclick="setSystemFilter('Chronosystem')" data-sys="Chronosystem" class="sys-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60 hover:border-purple-400/50 transition">
+              5. 기술·시대 변화
+            </button>
+          </div>
+
+          <!-- Filter & Reset -->
+          <div class="flex items-center gap-1.5">
+            <select id="actant-type-filter" onchange="applyGraphFilters()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+              <option value="ALL">모든 요소 보기</option>
+              <option value="HumanActor">사람·조직만 보기 (●)</option>
+              <option value="NonHumanActor">공간·제도·기술만 보기 (■)</option>
+              <option value="OPP_ONLY">★ 필수 연결고리만 보기</option>
+            </select>
+
+            <button onclick="resetGraphView()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1" title="화면 위치 초기화">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>정렬</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- D3 Interactive Canvas Box -->
+        <div id="network-canvas-container" class="flex-1 min-h-[540px] lg:min-h-[600px] rounded-2xl border border-slate-800 shadow-2xl relative select-none">
+          <svg id="ant-network-svg" class="w-full h-full block"></svg>
+
+          <!-- Clean, Beginner-Friendly Legend Overlay (Bottom-Left) -->
+          <div class="absolute bottom-3 left-3 glass-panel rounded-xl p-3 text-xs space-y-2 max-w-[310px] pointer-events-auto">
+            <div class="font-bold text-slate-200 flex items-center justify-between">
+              <span>지도 기호 안내</span>
+              <span class="text-[11px] text-sky-300">요소를 클릭하면 설명이 나옵니다</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-200 border-t border-slate-800 pt-2">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-full bg-sky-400 inline-block border border-white"></span>
+                <span>사람·교내 모임</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-sm bg-purple-400 inline-block border border-white"></span>
+                <span>공간·제도·기술</span>
+              </div>
+              <div class="flex items-center gap-1.5 col-span-2">
+                <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-bold text-[10px]">★ 필수</span>
+                <span class="text-amber-300 font-medium">협력수업이 성사되려면 꼭 거쳐야 하는 핵심 요소</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] border-t border-slate-800 pt-2">
+              <div class="flex items-center gap-1.5">
+                <span class="w-5 h-1 rounded bg-sky-400 inline-block"></span>
+                <span class="text-sky-200">돕는 관계 (협력·지원)</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-5 h-0.5 border-b-2 border-dashed border-rose-400 inline-block"></span>
+                <span class="text-rose-300">가로막는 관계 (부담·갈등)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top-Right Active Situation Story Banner -->
+          <div id="mutation-banner" class="hidden absolute top-3 right-3 glass-panel border-amber-400/60 rounded-xl p-3.5 text-xs max-w-sm shadow-2xl">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="font-bold text-amber-300 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span id="mutation-banner-title">현장 상황 적용됨</span>
+              </span>
+              <button onclick="resetToBaseOntology()" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-200">
+                원래대로 보기
+              </button>
+            </div>
+            <p id="mutation-banner-text" class="text-xs text-slate-200 leading-relaxed"></p>
+          </div>
+        </div>
+
+        <!-- 4 Stages of Making Collaborative Classes Work -->
+        <div class="glass-panel rounded-2xl p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="footsteps" class="w-4 h-4 text-amber-400"></i>
+              <h2 class="text-xs sm:text-sm font-bold text-white">
+                협력수업이 학교에 자리 잡는 4단계 과정
+              </h2>
+            </div>
+            <span id="translation-status-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-medium">
+              기본 상태 진단
+            </span>
+          </div>
+          <div id="studio-translation-cards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            <!-- Populated by app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Prominent Interview Input & Selected Element Guide (5 cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-3">
+
+        <!-- Sub-tabs for Right Panel -->
+        <div class="glass-panel rounded-2xl p-1.5 flex items-center gap-1 no-print">
+          <button id="drawer-tab-interview" onclick="switchDrawerTab('interview')" class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            <i data-lucide="pen-line" class="w-4 h-4"></i>
+            <span>인터뷰 입력 &amp; 상황 체험</span>
+          </button>
+          <button id="drawer-tab-inspector" onclick="switchDrawerTab('inspector')" class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200">
+            <i data-lucide="info" class="w-4 h-4"></i>
+            <span>선택한 요소 설명 보기</span>
+          </button>
+        </div>
+
+        <!-- PANEL A: Large Prominent Interview Input & Situation Simulator -->
+        <div id="drawer-panel-interview" class="glass-panel rounded-2xl p-4 sm:p-5 flex-1 flex flex-col gap-4 border-2 border-amber-500/30 shadow-xl shadow-amber-500/5">
+
+          <!-- Prominent Main Interview Input Box -->
+          <div class="bg-slate-900/95 border-2 border-amber-400/50 rounded-2xl p-4 space-y-3.5 shadow-lg">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 mb-1.5">
+                  ✍️ 핵심 기능 · 현장 인터뷰 입력칸
+                </span>
+                <h3 class="text-base font-bold text-white">
+                  선생님의 인터뷰나 현장 이야기를 입력해 보세요
+                </h3>
+                <p class="text-xs text-slate-300 mt-0.5">
+                  직접 글을 적거나 아래 <strong>예시 상황 버튼</strong>·<strong>단어 태그</strong>를 누르면 왼쪽 지도가 실시간으로 변합니다.
+                </p>
+              </div>
+              <button onclick="clearInterviewInput()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white shrink-0">
+                내용 지우기
+              </button>
+            </div>
+
+            <!-- Speaker & Focus Subject Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">누구의 이야기인가요?</label>
+                <input id="interview-speaker" type="text" value="사서교사 A (중학교 7년차)" class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">중심이 되는 주체</label>
+                <select id="interview-target-actor" class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-none">
+                  <option value="SubjectTeacher">교과교사</option>
+                  <option value="TeacherLibrarian">사서교사</option>
+                  <option value="Principal">학교장(교장·교감)</option>
+                  <option value="PLC">전문적 학습공동체(교사 모임)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- One-Click Keyword Insertion Chips -->
+            <div class="space-y-1.5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+              <div class="text-[11px] font-semibold text-slate-400 flex items-center justify-between">
+                <span>💡 클릭하면 입력칸에 바로 들어가는 핵심 단어</span>
+                <span class="text-[10px] text-slate-500">초록=협력 강화 / 빨강=어려움·갈등</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <button type="button" onclick="insertKeywordChip('전문적학습공동체')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition">+ 전문적학습공동체</button>
+                <button type="button" onclick="insertKeywordChip('에듀테크')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition">+ 에듀테크</button>
+                <button type="button" onclick="insertKeywordChip('AI 리터러시')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition">+ AI 리터러시</button>
+                <button type="button" onclick="insertKeywordChip('성취기준 재구성')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition">+ 성취기준 재구성</button>
+                <button type="button" onclick="insertKeywordChip('융합수업')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition">+ 융합수업</button>
+                <button type="button" onclick="insertKeywordChip('진도 압박')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition">+ 진도 압박</button>
+                <button type="button" onclick="insertKeywordChip('평가 부담')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition">+ 평가 부담</button>
+                <button type="button" onclick="insertKeywordChip('수능 입시')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition">+ 수능 입시</button>
+                <button type="button" onclick="insertKeywordChip('예산 부족')" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition">+ 예산 부족</button>
+              </div>
+            </div>
+
+            <!-- Big, High-Visibility Interview Textarea -->
+            <div>
+              <label for="interview-textarea" class="block text-xs font-bold text-amber-300 mb-1.5">
+                📝 인터뷰 내용 입력칸 (자유롭게 작성하거나 수정하세요)
+              </label>
+              <textarea
+                id="interview-textarea"
+                rows="6"
+                class="w-full min-h-[155px] bg-slate-950 border-2 border-slate-700 focus:border-amber-400 rounded-xl p-3.5 text-sm text-white leading-relaxed placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/20 resize-y shadow-inner"
+                placeholder="여기에 인터뷰 내용이나 학교 현장 이야기를 크게 적어보세요!&#10;&#10;예시: '고등학교에서는 수능과 입시, 교과서 진도 압박과 평가 부담이 크지만, 전문적학습공동체에서 사서교사와 함께 성취기준 재구성과 에듀테크·AI 리터러시 융합수업을 준비하면서 부담을 덜었습니다.'"
+              ></textarea>
+            </div>
+
+            <!-- Prominent Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button onclick="runInterviewAnalysis()" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-sky-400 hover:from-amber-300 hover:to-sky-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition transform active:scale-[0.99]">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span>인터뷰 내용 분석해서 지도에 바로 반영하기</span>
+              </button>
+              <button onclick="saveCurrentAnalysisSnapshot()" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-600 text-xs font-bold flex items-center gap-1.5 transition" title="현재 인터뷰와 관계망 상태를 보관함에 저장">
+                <i data-lucide="bookmark-plus" class="w-4 h-4 text-emerald-400"></i>
+                <span>결과 저장</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4 Quick Preset Situation Buttons (Fills the big input box above!) -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-sky-300">👇 또는 준비된 4가지 현장 인터뷰 예시를 눌러 바로 채워보세요</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button onclick="loadSampleInterview('librarian_a')" class="text-left p-2.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700 hover:border-emerald-400 transition">
+                <div class="flex items-center justify-between mb-0.5">
+                  <span class="text-xs font-bold text-emerald-300">🟢 예시 1. 사서교사 A</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">협력 강화</span>
+                </div>
+                <p class="text-[11px] text-slate-300 line-clamp-1">전학공 모임과 에듀테크·AI 탐구수업 결합</p>
+              </button>
+
+              <button onclick="loadSampleInterview('teacher_b')" class="text-left p-2.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700 hover:border-rose-400 transition">
+                <div class="flex items-center justify-between mb-0.5">
+                  <span class="text-xs font-bold text-rose-300">🔴 예시 2. 교과교사 B</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-semibold">진도·입시 부담</span>
+                </div>
+                <p class="text-[11px] text-slate-300 line-clamp-1">수능·입시와 진도 압박, 채점 부담 호소</p>
+              </button>
+
+              <button onclick="loadSampleInterview('principal_c')" class="text-left p-2.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 transition">
+                <div class="flex items-center justify-between mb-0.5">
+                  <span class="text-xs font-bold text-amber-300">🟡 예시 3. 학교장 C</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">지원+고민 공존</span>
+                </div>
+                <p class="text-[11px] text-slate-300 line-clamp-1">교육과정 권장 속 예산 부족·입시 걱정</p>
+              </button>
+
+              <button onclick="loadSampleInterview('synthesis_d')" class="text-left p-2.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700 hover:border-purple-400 transition">
+                <div class="flex items-center justify-between mb-0.5">
+                  <span class="text-xs font-bold text-purple-300">🟣 예시 4. 공동 인터뷰 D</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-semibold">4단계 정착</span>
+                </div>
+                <p class="text-[11px] text-slate-300 line-clamp-1">평가 부담 해결 후 전 학년 수업으로 확산</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Plain-Language Explanation Result Box -->
+          <div id="analysis-result-box" class="bg-slate-900/95 border border-slate-700 rounded-xl p-3.5 space-y-2.5 text-xs">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span class="font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-sky-400"></i>
+                인터뷰 분석 결과: 관계망이 어떻게 변했나요?
+              </span>
+              <span id="analysis-sentiment-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">입력 대기 중</span>
+            </div>
+
+            <div id="extracted-keywords-container" class="space-y-2 text-slate-200 leading-relaxed">
+              <p class="text-slate-400">위 입력칸에 인터뷰 내용을 적거나 예시(1~4번)를 클릭하면, 어떤 요소들이 연결되고 갈등을 겪는지 쉬운 해설이 여기에 표시됩니다.</p>
+            </div>
+
+            <div id="annotated-transcript-preview" class="hidden pt-2 border-t border-slate-800 text-xs text-slate-300 leading-relaxed"></div>
+          </div>
+        </div>
+
+        <!-- PANEL B: Selected Element Easy Inspector -->
+        <div id="drawer-panel-inspector" class="hidden glass-panel rounded-2xl p-4 flex-1 flex flex-col gap-3.5">
+          <div id="inspector-content" class="flex-1 flex flex-col gap-3">
+            <!-- Populated when a node is clicked -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 2: PLAIN-KOREAN GUIDE TABLE & REPORT
+    =========================================== -->
+    <section id="tab-content-matrix" class="hidden flex-col gap-5">
+      <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 no-print">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i data-lucide="book-open-check" class="w-5 h-5 text-amber-400"></i>
+            학교도서관 협력수업 18개 요소 전체 해설표 &amp; 4단계 과정 리포트
+          </h2>
+          <p class="text-xs text-slate-300 mt-0.5">
+            복잡한 전문 용어를 쉬운 우리말로 풀어 정리한 표입니다. 엑셀(CSV)로 내려받거나 인쇄할 수 있습니다.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="exportMatrixCSV()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>엑셀(CSV) 다운로드</span>
+          </button>
+          <button onclick="exportNetworkJSON()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-sky-300 flex items-center gap-1.5 transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>데이터(JSON) 저장</span>
+          </button>
+          <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>리포트 인쇄 / PDF 저장</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. 4 Stages Table -->
+      <div class="glass-panel rounded-2xl p-5 space-y-3">
+        <div>
+          <h3 class="text-sm font-bold text-amber-300">
+            1. 협력수업이 만들어지고 정착하는 4단계 과정
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">처음 수업의 필요성을 느끼는 순간부터 학교 전체의 문화로 자리 잡기까지의 흐름입니다.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-200 bg-slate-900/70">
+                <th class="py-3 px-3 font-bold w-44">진행 단계</th>
+                <th class="py-3 px-3 font-bold w-52">꼭 거쳐야 하는 핵심 요소</th>
+                <th class="py-3 px-3 font-bold">함께 참여하는 주체들</th>
+                <th class="py-3 px-3 font-bold">극복해야 할 어려움</th>
+                <th class="py-3 px-3 font-bold">현장에서는 어떻게 해결하나요?</th>
+                <th class="py-3 px-3 font-bold w-28 text-center">현재 달성도</th>
+              </tr>
+            </thead>
+            <tbody id="translation-matrix-tbody" class="divide-y divide-slate-800">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. 18 Elements Inventory Table -->
+      <div class="glass-panel rounded-2xl p-5 space-y-3">
+        <div>
+          <h3 class="text-sm font-bold text-sky-300">
+            2. 협력수업에 영향을 주는 18가지 요소 한눈에 보기 (5단계 환경별 정리)
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">각 행을 클릭하면 지도에서 해당 요소의 위치를 바로 확인할 수 있습니다.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-200 bg-slate-900/70">
+                <th class="py-2.5 px-3 font-bold">환경 범위</th>
+                <th class="py-2.5 px-3 font-bold">요소 이름</th>
+                <th class="py-2.5 px-3 font-bold">구분</th>
+                <th class="py-2.5 px-3 font-bold">수업에서의 역할</th>
+                <th class="py-2.5 px-3 font-bold text-center">필수 연결고리</th>
+                <th class="py-2.5 px-3 font-bold text-center">돕는 선 / 갈등 선</th>
+                <th class="py-2.5 px-3 font-bold text-center">영향력 점수</th>
+                <th class="py-2.5 px-3 font-bold">쉬운 설명</th>
+              </tr>
+            </thead>
+            <tbody id="actant-inventory-tbody" class="divide-y divide-slate-800">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 3: SAVED SNAPSHOTS & DATA MANAGEMENT
+    =========================================== -->
+    <section id="tab-content-repo" class="hidden flex-col gap-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <div class="glass-panel rounded-2xl p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="bookmark" class="w-4 h-4 text-emerald-400"></i>
+                  저장된 현장 상황 기록 보관함
+                </h3>
+                <p class="text-xs text-slate-300 mt-0.5">저장해 둔 상황 기록을 클릭하면 언제든 그때의 관계망 지도로 되돌아갈 수 있습니다.</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button onclick="pullSnapshotsFromFirebase()" class="px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-semibold flex items-center gap-1">
+                  <i data-lucide="cloud-download" class="w-3.5 h-3.5"></i>
+                  <span>클라우드에서 불러오기</span>
+                </button>
+                <button onclick="seedFirebaseDatabase()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center gap-1">
+                  <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
+                  <span>기본 예시 클라우드 업로드</span>
+                </button>
+                <button onclick="saveCurrentAnalysisSnapshot()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1">
+                  <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                  <span>현재 상태 저장하기</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="saved-snapshots-list" class="space-y-2.5 max-h-[540px] overflow-y-auto pr-1">
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Advanced Research Raw Data (Collapsed/Clean for researchers) -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+          <div class="glass-panel rounded-2xl p-5 flex-1 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="database" class="w-4 h-4 text-sky-400"></i>
+                  원본 연구 데이터 설정 (연구자용)
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">이 지도를 구성하는 18개 요소의 원본 정의 데이터(`ant_library_collab.ttl`)입니다.</p>
+              </div>
+              <button onclick="reparseCustomTTL()" class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-1 transition">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                <span>변경사항 지도에 적용</span>
+              </button>
+            </div>
+            <textarea id="ttl-editor-textarea" class="w-full flex-1 min-h-[420px] bg-slate-950 border border-slate-800 rounded-xl p-3.5 font-mono text-xs text-sky-200 leading-relaxed focus:outline-none focus:border-sky-500"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FIREBASE CONFIG MODAL -->
+  <div id="firebase-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="text-base font-bold text-white">클라우드 데이터베이스(Firebase) 연결 설정</h3>
+        </div>
+        <button onclick="closeFirebaseModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        별도의 설정 없이도 현재 브라우저에 모든 기록이 자동 저장됩니다. 여러 기기에서 기록을 공유하려면 Firebase 주소를 입력해 주세요.
+      </p>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-300 mb-1">Firebase 데이터베이스 주소 (Database URL)</label>
+          <input id="fb-databaseURL" type="text" placeholder="https://프로젝트명-default-rtdb.firebaseio.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-slate-400 mb-1">프로젝트 ID (선택)</label>
+            <input id="fb-projectId" type="text" placeholder="ant-library-collab" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">API 키 (선택)</label>
+            <input id="fb-apiKey" type="text" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">또는 설정 JSON 붙여넣기</label>
+          <textarea id="fb-rawJson" rows="2" placeholder='{"databaseURL": "https://..."}' class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-[11px]"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+        <button onclick="clearFirebaseConfig()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 text-xs font-medium">
+          연결 해제 (브라우저 저장 사용)
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeFirebaseModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium">
+            닫기
+          </button>
+          <button onclick="saveFirebaseConfig()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+            저장 및 연결
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
